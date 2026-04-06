@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinDetect Pro | Enterprise AI Subsystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #09090b;
+            --charcoal: #111114;
+            --violet: #8b5cf6;
+            --electric: #a855f7;
+            --brushed: linear-gradient(180deg, #555 0%, #333 45%, #222 55%, #111 100%);
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--obsidian);
+            background-image: url("data:image/svg+xml,%3Csvg width='800' height='800' xmlns='http://www.w3.org/2000/svg'%3Base-panel%3E%3Cpath d='M700 100h50v50m0 100v50h-50m-100-100h-50v-50m-100 200h50v50m100 100h50v50M200 400h50v50m100 0h50v50m100 0h50v50' stroke='%23ffffff05' fill='none' stroke-width='1'/%3E%3Ccircle cx='750' cy='150' r='2' fill='%23ffffff05'/%3E%3Ccircle cx='600' cy='100' r='2' fill='%23ffffff05'/%3E%3Ccircle cx='650' cy='300' r='2' fill='%23ffffff05'/%3E%3C/svg%3E");
+            background-position: right center;
+            background-repeat: no-repeat;
+        }
+
+        .glass-panel {
+            background: rgba(17, 17, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .metallic-btn {
+            background: var(--brushed);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .metallic-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+        .metallic-btn:hover::before { transform: translateX(100%); }
+        .metallic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .scan-line {
+            height: 2px;
+            width: 100%;
+            background: var(--electric);
+            box-shadow: 0 0 15px var(--electric);
+            position: absolute;
+            left: 0;
+            z-index: 20;
+            animation: scanning 3s infinite ease-in-out;
+            opacity: 0.7;
+        }
+        @keyframes scanning {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+
+        .status-pill {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .neural-shield {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+        }
+
+        @keyframes slide-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in { animation: slide-in 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen overflow-x-hidden selection:bg-violet-500/30">
+
+    <div class="max-w-6xl mx-auto px-8 py-10">
+        <!-- Header -->
+        <nav class="flex justify-between items-start mb-16">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-indigo-950/40 rounded-xl flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                    <i data-lucide="shield" class="w-6 h-6 text-violet-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                        SkinDetect <span class="text-slate-400 font-medium">Pro</span>
+                    </h1>
+                    <p class="text-[10px] uppercase font-black tracking-[0.3em] text-slate-500">Enterprise AI Subsystem</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 px-4 py-1.5 status-pill rounded-full">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-[9px] font-black uppercase tracking-widest">Server: Online</span>
+            </div>
+        </nav>
+
+        <main class="grid grid-cols-12 gap-12">
+            
+            <div class="col-span-12 lg:col-span-8 flex flex-col items-center gap-10">
+                
+                <!-- Main Ingestion Panel -->
+                <div id="dropzone-container" class="w-full glass-panel rounded-[2.5rem] p-1.5 relative overflow-hidden transition-all duration-500 hover:border-violet-500/40">
+                    <div id="dropzone" class="relative bg-slate-950/40 m-2 rounded-[2rem] py-24 border-2 border-dashed border-slate-800/50 flex flex-col items-center justify-center cursor-pointer group">
+                        <input type="file" id="fileInput" class="absolute inset-0 opacity-0 cursor-pointer z-30" accept="image/png, image/jpeg">
+                        
+                        <div class="relative w-28 h-28 mb-8 neural-shield flex items-center justify-center rounded-full overflow-hidden">
+                            <div class="scan-line"></div>
+                            <i data-lucide="aperture" class="w-12 h-12 text-violet-400/80 relative z-10 group-hover:rotate-90 transition-transform duration-700"></i>
+                        </div>
+
+                        <div class="text-center space-y-4">
+                            <h2 class="text-3xl font-extrabold text-white tracking-tight">
+                                Secure Subject <span class="text-violet-500 italic font-medium">Ingestion</span>
+                            </h2>
+                            <p class="text-slate-500 text-sm max-w-sm mx-auto font-medium">
+                                Drag and drop any JPEG or PNG subject for a <br> high-fidelity Bayesian scan.
+                            </p>
+                            <p id="file-label" class="hidden inline-block text-[10px] font-mono text-violet-400 bg-violet-400/10 px-3 py-1 rounded-full uppercase tracking-widest">Selected: ...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Deck -->
+                <div class="flex items-center gap-8">
+                    <button id="processBtn" disabled class="metallic-btn px-10 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-3 disabled:opacity-30 disabled:grayscale transition-all shadow-2xl">
+                        <i id="btn-icon" data-lucide="fingerprint" class="w-5 h-5 text-slate-300"></i>
+                        <span id="btn-text">Execute Bayesian Scan</span>
+                    </button>
+
+                    <div class="flex items-center gap-6">
+                        <button id="resetBtn" class="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">
+                            <i data-lucide="x" class="w-4 h-4"></i> Reset
+                        </button>
+                    </div>
+                    
+                    <button id="downloadBtn" class="hidden metallic-btn px-8 py-3 rounded-xl text-white font-bold text-xs flex items-center gap-2 shadow-lg">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download Mask
+                    </button>
+                </div>
+
+                <!-- Subsystem Feed -->
+                <div class="w-full glass-panel rounded-2xl p-6 border-slate-800/40">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="terminal" class="w-4 h-4 text-slate-600"></i>
+                        <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Subsystem Feed</span>
+                    </div>
+                    <div id="log-content" class="font-mono text-[11px] text-slate-500 space-y-2 pl-2">
+                        <p class="text-emerald-500/60">> Neural Pipeline Initialized</p>
+                        <p class="text-slate-600">> Bayesian Scan Model: Standard Skin Tiezs v.4.1</p>
+                        <p class="text-slate-600">> Anomaly Detection Baseline Established</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Analytics & Copilot -->
+            <div id="analytics-panel" class="col-span-12 lg:col-span-4 space-y-8 hidden">
+                
+                <div class="glass-panel rounded-[2rem] p-8 border-violet-500/10">
+                    <h3 class="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-10 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-violet-400"></i>
+                        Analysis Telemetry
+                    </h3>
+
+                    <div class="space-y-10">
+                        <div>
+                            <div class="flex justify-between items-end mb-4">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Skin Ratio</span>
+                                <span id="skin-ratio" class="font-mono text-2xl font-bold text-white">0%</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                                <div id="skin-progress-bar" class="h-full bg-gradient-to-r from-violet-600 to-indigo-600 w-0 transition-all duration-1000"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-5 bg-slate-900/50 rounded-2xl border border-white/5">
+                                <p class="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">Strategy</p>
+                                <p class="text-xs font-bold text-violet-400 uppercase">Bayesian</p>
+                            </div>
+                            <div class="p-5 bg-slate-900/50 rounded-2xl border border-white/5">
+                                <p class="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">Latency</p>
+                                <p id="latency-val" class="text-xs font-bold text-white">0ms</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Copilot Panel -->
+                <div id="ai-copilot-panel" class="glass-panel rounded-[2rem] p-1.5 relative overflow-hidden transition-all duration-700">
+                    <div class="bg-slate-950/40 rounded-[1.8rem] p-7 space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                                <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-[10px] font-black text-white uppercase tracking-widest">AI Copilot</h4>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <span class="text-[8px] text-emerald-400 font-bold uppercase tracking-widest">Neural Link Active</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="min-h-[160px] relative">
+                            <div id="ai-typing" class="hidden flex gap-1.5 items-center absolute top-0 left-0">
+                                <div class="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div class="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div class="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce"></div>
+                            </div>
+                            <p id="ai-text" class="text-[12px] leading-relaxed text-slate-400 font-medium whitespace-pre-wrap"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Engine -->
+            <div id="comparison-view" class="col-span-12 hidden mt-12 animate-slide-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="space-y-4">
+                        <p class="text-slate-600 text-[9px] font-black uppercase tracking-[0.3em] pl-2">Subject Input</p>
+                        <div class="glass-panel p-3 rounded-[2.5rem] border-white/5 overflow-hidden aspect-video">
+                            <img id="img-raw" class="w-full h-full object-cover rounded-[1.8rem]" src="" alt="Raw Input">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <p class="text-violet-500 text-[9px] font-black uppercase tracking-[0.3em] pl-2">Augmented Result</p>
+                        <div class="glass-panel p-3 rounded-[2.5rem] border-violet-500/20 overflow-hidden aspect-video relative">
+                            <div class="scan-line"></div>
+                            <img id="img-ai" class="w-full h-full object-cover rounded-[1.8rem]" src="" alt="AI Output">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="fixed bottom-12 right-12 z-[100] flex flex-col gap-4 pointer-events-none"></div>
+
+        <footer class="mt-40 text-center pb-24 border-t border-slate-900 pt-16">
+            <p class="text-[9px] font-bold text-slate-700 uppercase tracking-[0.5em]">SkinDetect Enterprise Solutions • Restricted Access Layer</p>
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let selectedFile = null;
+        let processedBlobUrl = null;
+
+        const ui = {
+            dropzone: document.getElementById('dropzone'),
+            fileInput: document.getElementById('fileInput'),
+            fileLabel: document.getElementById('file-label'),
+            processBtn: document.getElementById('processBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            btnText: document.getElementById('btn-text'),
+            btnIcon: document.getElementById('btn-icon'),
+            logContent: document.getElementById('log-content'),
+            analyticsPanel: document.getElementById('analytics-panel'),
+            comparisonView: document.getElementById('comparison-view'),
+            imgRaw: document.getElementById('img-raw'),
+            imgAI: document.getElementById('img-ai'),
+            skinRatio: document.getElementById('skin-ratio'),
+            skinProgressBar: document.getElementById('skin-progress-bar'),
+            latencyVal: document.getElementById('latency-val'),
+            toastContainer: document.getElementById('toast-container'),
+            aiCopilotPanel: document.getElementById('ai-copilot-panel'),
+            aiText: document.getElementById('ai-text'),
+            aiTyping: document.getElementById('ai-typing')
+        };
+
+        ['dragenter', 'dragover'].forEach(name => {
+            ui.dropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                ui.dropzone.classList.add('border-violet-500', 'bg-violet-500/5');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+            ui.dropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                ui.dropzone.classList.remove('border-violet-500', 'bg-violet-500/5');
+            });
+        });
+
+        ui.dropzone.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files.length) handleFileAction(e.dataTransfer.files[0]);
+        });
+
+        ui.fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFileAction(e.target.files[0]);
+        });
+
+        ui.processBtn.addEventListener('click', runAIProcessing);
+        ui.resetBtn.addEventListener('click', () => window.location.reload());
+
+        function handleFileAction(file) {
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                showToast('Format Fault', 'error');
+                return;
+            }
+            selectedFile = file;
+            ui.fileLabel.innerText = `Cached: ${file.name}`;
+            ui.fileLabel.classList.remove('hidden');
+            ui.processBtn.removeAttribute('disabled');
+            log(`Subject Captured: ${file.name}`, 'violet-400');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => ui.imgRaw.src = e.target.result;
+            reader.readAsDataURL(file);
+        }
+
+        async function runAIProcessing() {
+            if (!selectedFile) return;
+
+            ui.processBtn.setAttribute('disabled', 'true');
+            ui.btnText.innerText = 'Calculating Descriptors...';
+            ui.btnIcon.setAttribute('data-lucide', 'loader-2');
+            ui.btnIcon.classList.add('animate-spin');
+            lucide.createIcons();
+
+            log('Establishing Bayesian Context...', 'violet-400');
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch('/api/v1/processor/detect-skin', { method: 'POST', body: formData });
+
+                if (!response.ok) throw new Error('Kernel Refused Payload');
+
+                const percentage = response.headers.get('X-Skin-Percentage') || '0.00';
+                const blob = await response.blob();
+                
+                if (processedBlobUrl) URL.revokeObjectURL(processedBlobUrl);
+                processedBlobUrl = URL.createObjectURL(blob);
+                
+                const latency = Math.round(performance.now() - startTime);
+
+                ui.imgAI.src = processedBlobUrl;
+                ui.skinRatio.innerText = `${percentage}%`;
+                ui.skinProgressBar.style.width = `${percentage}%`;
+                ui.latencyVal.innerText = `${latency}ms`;
+                
+                showToast('Neural Match: Verification Success', 'success');
+                log(`Pipeline Sealed | Metrics Synchronized | Latency: ${latency}ms`, 'emerald-500');
+
+                transitionToResults();
+                triggerAiCopilot(percentage);
+
+                ui.btnText.innerText = 'Scan Complete';
+                ui.btnIcon.setAttribute('data-lucide', 'check');
+                ui.btnIcon.classList.remove('animate-spin');
+                lucide.createIcons();
+
+                ui.downloadBtn.classList.remove('hidden');
+                ui.downloadBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = processedBlobUrl;
+                    a.download = `SKIN_MASK_${Date.now()}.png`;
+                    a.click();
+                };
+
+            } catch (err) {
+                showToast(`System Fault: ${err.message}`, 'error');
+                log(`CRITICAL OVERLOAD: ${err.message}`, 'rose-500');
+                ui.processBtn.removeAttribute('disabled');
+                ui.btnText.innerText = 'Re-Execute Scan';
+            }
+        }
+
+        async function triggerAiCopilot(percentage) {
+            ui.aiTyping.classList.remove('hidden');
+            ui.aiText.innerText = "";
+            
+            try {
+                const response = await fetch(`/api/v1/processor/analyze-copilot?percentage=${percentage}`);
+                const data = await response.json();
+                ui.aiTyping.classList.add('hidden');
+                typeWriter(data.analysis, ui.aiText);
+            } catch (err) {
+                ui.aiTyping.classList.add('hidden');
+                ui.aiText.innerText = "Neural core synchronization failed. Please check AI key.";
+            }
+        }
+
+        function typeWriter(text, element, speed = 20) {
+            let i = 0;
+            element.innerText = "";
+            function type() {
+                if (i < text.length) {
+                    element.innerText += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        function transitionToResults() {
+            ui.analyticsPanel.classList.remove('hidden');
+            ui.comparisonView.classList.remove('hidden');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `glass-panel px-6 py-4 rounded-xl flex items-center gap-4 text-[10px] font-black uppercase tracking-widest shadow-2xl animate-slide-in border-l-4 ${type === 'success' ? 'border-l-emerald-500' : 'border-l-rose-500'}`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-4 h-4 ${type === 'success' ? 'text-emerald-400' : 'text-rose-400'}"></i>
+                <span class="text-white">${message}</span>
+            `;
+            ui.toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function log(msg, color = 'slate-500') {
+            const p = document.createElement('p');
+            p.className = `text-${color}`;
+            p.innerText = `> ${msg}`;
+            ui.logContent.appendChild(p);
+            if (ui.logContent.children.length > 5) ui.logContent.removeChild(ui.logContent.firstChild);
+        }
+    </script>
+</body>
+</html>
+</body>
+</html>
