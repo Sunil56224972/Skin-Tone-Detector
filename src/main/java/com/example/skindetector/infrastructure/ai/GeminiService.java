@@ -26,12 +26,22 @@ public class GeminiService {
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
 
     public GeminiService() {
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-        this.apiKey = dotenv.get("GEMINI_API_KEY");
+        // Load .env from the project root or current working directory
+        Dotenv dotenv = Dotenv.configure()
+                .directory("./")
+                .ignoreIfMissing()
+                .load();
+
+        // Dual-Lookup: Check .env first, fallback to System Environment
+        String envKey = dotenv.get("GEMINI_API_KEY");
+        this.apiKey = (envKey != null && !envKey.isEmpty()) ? envKey : System.getenv("GEMINI_API_KEY");
+        
         this.restTemplate = new RestTemplate();
         
         if (this.apiKey == null || this.apiKey.isEmpty()) {
-            log.warn("GEMINI_API_KEY is not defined in the environment or .env file.");
+            log.error("CRITICAL: GEMINI_API_KEY is not defined. AI Copilot will be disabled.");
+        } else {
+            log.info("AI Copilot Neural Link: Successfully established (Key: {}***)", this.apiKey.substring(0, 5));
         }
     }
 
